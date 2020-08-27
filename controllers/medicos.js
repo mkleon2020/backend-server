@@ -1,63 +1,44 @@
 const {response} = require('express');
-const bcryptjs = require('bcryptjs');
-const Usuario = require('../models/usuario');
-const { generarJWT } = require('../helpers/jwt');
-const getUsuarios = async(req, res) => {
-	const desde = Number(req.query.desde) || 0;
-
-	//Promise ejecuta promesas simultaneas
-	const [usuarios, total] = await Promise.all([
-		Usuario.find({},'nombre email role google img')
-		.skip(desde)
-		.limit(5),
-
-		Usuario.countDocuments()
-	]);
+const Medico = require('../models/medico');
+const getMedicos = async(req, res) => {
+	const medicos = await Medico.find()
+	.populate("usuario","nombre").populate("hospital","nombre")
 	res.json({
 		ok:true,
-		usuarios,
-		totalregistros:total
+		medicos
 	});
 }
 
-const crearUsuario = async(req, res = response) => {
+const crearMedico = async(req, res = response) => {
 
-	const {email,password, nombre} = req.body;
+	const uid = req.uid;
+	const medico = new Medico({
+		usuario:uid,
+		...req.body
+	});
 	
 	try {
-		const existeEmail = await Usuario.findOne({email});
+	
 		
-		if(existeEmail){
-			return res.status(400).json({
-				ok:false,
-				msg:"El correo ya esta registrado"
-			});
-		}
-		const usuario = new Usuario(req.body);
-		//Encriptar clave
-		const salt = bcryptjs.genSaltSync();
-		usuario.password = bcryptjs.hashSync(password,salt);
 		// Guardar usuario
-		await usuario.save();
-		const token = await generarJWT(usuario.id);
+		const medicoDB = await medico.save();
 		res.json({
 			ok:true,
-			usuario,
-			token
+			medico:medicoDB,
 		});
 		
 	} catch (error) {
 
 		res.status(500).json({
 			ok: false,
-			msg: 'Error inesperado'
+			msg: 'Hable con el administrador'
 		})
 		
 	}
 
 }
 
-const actualizarUsuario = async(req, res = response) => {
+const actualizarMedico = async(req, res = response) => {
 
 	const uid = req.params.id;
 try {
@@ -99,7 +80,7 @@ try {
 }
 
 }
-const borrarUsuario = async(req, res = response) => {
+const borrarMedico = async(req, res = response) => {
 	const uid = req.params.id;
 	
 	try {
@@ -128,8 +109,8 @@ const borrarUsuario = async(req, res = response) => {
 
 
 module.exports = {
-	getUsuarios,
-	crearUsuario,
-	actualizarUsuario,
-	borrarUsuario
+	getMedicos,
+	crearMedico,
+	actualizarMedico,
+	borrarMedico
 }
