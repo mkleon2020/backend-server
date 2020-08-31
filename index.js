@@ -19,6 +19,9 @@ app.use(express.json());
 //llama la funcion BD
 dbConnection();
 
+//Directorio Publico
+app.use(express.static('public'));
+
 
 
 //rutas
