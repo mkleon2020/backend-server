@@ -37,36 +37,30 @@ const crearHospital = async(req, res = response) => {
 }
 
 const actualizarHospital = async(req, res = response) => {
-
-	const uid = req.params.id;
+// id hospital
+	const id = req.params.id;
+// id de usuario que viene de la validacion
+	const uid = req.uid;
 try {
-	const usuarioDB = await Usuario.findById(uid);
+	const hospitalDB = await Hospital.findById(id);
 
-	if(!usuarioDB){
+	if(!hospitalDB){
 		return res.status(404).json({
 			ok: false,
-			msg:'No existe un usuario por  ese ID'
+			msg:'No existe Hospital'
 		});
 	}
 	
 	//Actualizar
-	// Aqui esta sacando  los campos q no quiere actualizar
-	const {google,password,email, ...campos} = req.body;
-	if(usuarioDB.email !== email){
-		
-		const existeEmail = await Usuario.findOne({email});
-		if(existeEmail){
-			return res.status(400).json({
-				ok: false,
-				msg: 'Ya existe un usuario con ese Email'
-			});
-		}
+	const cambiosHopistal = {
+		...req.body,
+		usuario:uid
 	}
-	campos.email = email;
-	const usuarioActualizado = await Usuario.findByIdAndUpdate(uid,campos,{new:true});
+	
+	const hospitalActualizado = await Hospital.findByIdAndUpdate(id,cambiosHopistal,{new:true});
 	res.json({
 		ok:true,
-		usuario:usuarioActualizado
+		hospital:hospitalActualizado
 	});
 
 	
@@ -82,18 +76,18 @@ const borrarHospital = async(req, res = response) => {
 	const uid = req.params.id;
 	
 	try {
-		const usuarioDB = await Usuario.findById(uid);
+		const hospitalDB = await Hospital.findById(uid);
 
-	if(!usuarioDB){
+	if(!hospitalDB){
 		return res.status(404).json({
 			ok: false,
-			msg:'No existe un usuario por  ese ID'
+			msg:'No existe Hospital por ese ID'
 		});
 	}
-	await Usuario.findByIdAndDelete(uid);
+	await Hospital.findByIdAndDelete(uid);
 	res.json({
 		ok: true,
-		msg: 'Usuario eliminado'
+		msg: 'Hospital eliminado'
 	});
 	} catch (error) {
 		console.log(error);
@@ -111,7 +105,4 @@ module.exports = {
 	crearHospital,
 	actualizarHospital,
 	borrarHospital
-
-
-
 }
